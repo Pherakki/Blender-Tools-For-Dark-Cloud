@@ -7,7 +7,7 @@ class BBPBinary(Serializable):
         self.bpms = []
         
     def __repr__(self):
-        return f"[BBP] {self.bpms}"
+        return f"[BBP] {len(self.bpms)}"
     
     def read_write(self, rw):
         if rw.mode() == "read":

@@ -7,7 +7,7 @@ class MOTBinary(Serializable):
         self.animations = []
 
     def __repr__(self):
-        return f"[MOT] {self.animations}"
+        return f"[MOT] {len(self.animations)}"
 
     def read_write(self, rw):
         if rw.mode() == "read":

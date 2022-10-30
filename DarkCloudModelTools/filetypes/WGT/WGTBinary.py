@@ -7,7 +7,7 @@ class WGTBinary(Serializable):
         self.groups = []
         
     def __repr__(self):
-        return f"[WGT] {self.groups}"
+        return f"[WGT] {len(self.groups)}"
     
     def read_write(self, rw):
         if rw.mode() == "read":
@@ -35,7 +35,7 @@ class WGTBinary(Serializable):
             self.elements = []
             
         def __repr__(self):
-            return f"[WGT::VertexGroup] {self.meshbone_idx} {self.bone_idx} {self.unknown_0x08} {self.header_size} {self.elem_count} {self.total_size} {self.unknown_0x18} {self.unknown_0x1C} {self.elements}"
+            return f"[WGT::VertexGroup] {self.meshbone_idx} {self.bone_idx} {self.unknown_0x08} {self.header_size} {self.elem_count} {self.total_size} {self.unknown_0x18} {self.unknown_0x1C}"
         
         def read_write(self, rw):
             self.meshbone_idx = rw.rw_uint32(self.meshbone_idx)
