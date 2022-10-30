@@ -11,6 +11,11 @@ class CFGInterface:
         self.bbp = None
         self.wgt = None
         self.mot = None
+        
+        self.shadow_mds = None
+        self.shadow_bbp = None
+        self.shadow_wgt = None
+        self.shadow_mot = None
 
     #################################
     # Data Transformation Functions #
@@ -47,6 +52,12 @@ class CFGInterface:
                     instance.mot = line[2][1:-1]
                     instance.bbp = line[4][1:-1]
                     instance.wgt = line[6][1:-1]
+                elif line[0] == "SHADOW_MODEL":
+                    instance.shadow_mds = line[1][1:-1]
+                elif line[0] == "SHADOW_MOTION":
+                    instance.shadow_mot = line[1][1:-1]
+                    instance.shadow_bbp = line[3][1:-1]
+                    instance.shadow_wgt = line[5][1:-1]
         return instance
         
     def to_binary(self):
