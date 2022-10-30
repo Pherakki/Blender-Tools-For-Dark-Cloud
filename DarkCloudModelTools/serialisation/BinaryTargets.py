@@ -218,6 +218,9 @@ class BinaryTargetBase:
     def rw_obj_array(self, value, obj_constructor, shape, validator=None, *args, **kwargs):
         raise NotImplementedError
 
+    def unsafe_align(self, offset, alignment, padval=b'\x00'):
+        raise NotImplementedError
+
     def align(self, offset, alignment, padval=b'\x00'):
         raise NotImplementedError
 
@@ -307,9 +310,13 @@ class Reader(BinaryTargetBase):
             data = chunk_list(data, subshape)
         return data
 
-    def align(self, offset, alignment, padval=b'\x00'):
+    def unsafe_align(self, offset, alignment, padval=b'\x00'):
         n_to_read = (alignment - (offset % alignment)) % alignment
         data = self.bytestream.read(n_to_read)
+        return data
+        
+    def align(self, offset, alignment, padval=b'\x00'):
+        data = self.unsafe_align(offset, alignment, padval)
         expected = padval * (len(data) // len(padval))
         assert data == expected, f"Unexpected padding: Expected {expected}, read {data}."
 
@@ -381,10 +388,14 @@ class Writer(BinaryTargetBase):
 
         return value
 
-    def align(self, offset, alignment, padval=b'\x00'):
+    def unsafe_align(self, offset, alignment, padval=b'\x00'):
         n_to_read = (alignment - (offset % alignment)) % alignment
         data = padval * (n_to_read // len(padval))
         self.bytestream.write(data)
+        return data
+
+    def align(self, offset, alignment, padval=b'\x00'):
+        self.unsafe_align(offset, alignment, padval)
 
     def assert_at_eof(self):
         pass
@@ -450,11 +461,16 @@ class OffsetTracker(BinaryTargetBase):
         self.virtual_offset += count
         return value
 
-    def align(self, offset, alignment, padval=b'\x00'):
+    def unsafe_align(self, offset, alignment, padval=b'\x00'):
         n_to_read = (alignment - (offset % alignment)) % alignment
         data = padval * (n_to_read // len(padval))
 
         self.adv_offset(len(data))
+        
+        return data
+
+    def align(self, offset, alignment, padval=b'\x00'):
+        self.unsafe_align(offset, alignment, padval)
 
     def assert_at_eof(self):
         pass
