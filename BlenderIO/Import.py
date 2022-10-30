@@ -1,4 +1,5 @@
 import array
+import copy
 import os
 import math
 
@@ -88,11 +89,11 @@ class ImportDC(bpy.types.Operator, ImportHelper):
         for submodel in model.submodels:
             # Create Armature
             armature_name = filename + "_armature"
-            self.import_armature(parent_obj, armature_name, submodel)
+            bone_mats = self.import_armature(parent_obj, armature_name, submodel)
             
             # Create Model
             textures = self.import_textures(submodel)
-            self.import_meshes(bpy.data.objects[armature_name], submodel)
+            self.import_meshes(bpy.data.objects[armature_name], submodel, bone_mats)
         
     def import_armature(self, parent_obj, armature_name, model):
         # DEFINITELY INCORRECT SOMEWHERE
@@ -142,6 +143,8 @@ class ImportDC(bpy.types.Operator, ImportHelper):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.context.view_layer.objects.active = parent_obj
         
+        return total_matrices
+        
     def generate_bone_idx_to_mesh_idx(self, model):
         bone_idx_to_mdt_idx = {i: b.mdt_idx for i, b in enumerate(model.mds.bones)}
         return bone_idx_to_mdt_idx
@@ -186,7 +189,7 @@ class ImportDC(bpy.types.Operator, ImportHelper):
                 textures.append(bpy_img)
         return textures
     
-    def import_meshes(self, armature, model):
+    def import_meshes(self, armature, model, bone_mats):
         weights = self.generate_weights(model)
         mdt_idx_to_bone_idx = self.generate_mesh_idx_to_bone_idx(model)
         for mesh_idx, mesh in enumerate(model.mds.meshes):
@@ -233,6 +236,7 @@ class ImportDC(bpy.types.Operator, ImportHelper):
                 vg = mesh_object.vertex_groups.new(name=vg_name)
                 for idx in range(len(verts)):
                     vg.add([idx], 1., "REPLACE")
+                    
                 
 
             # Import materials
@@ -288,6 +292,13 @@ class ImportDC(bpy.types.Operator, ImportHelper):
             bpy_mesh.normals_split_custom_set(tuple(zip(*(iter(clnors),) * 3)))
 
             bpy_mesh.use_auto_smooth = True
+
+
+            if mesh_idx in mdt_idx_to_bone_idx:
+                bone_idx = mdt_idx_to_bone_idx[mesh_idx]
+                bm = copy.deepcopy(bone_mats[bone_idx])
+                bm[:3, 3], bm[3, :3] = bm[3, :3], bm[:3, 3]
+                bpy_mesh.transform(Matrix(bm.tolist()))
 
             bpy_mesh.validate(verbose=True, clean_customdata=False)
             bpy_mesh.update()
